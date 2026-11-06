@@ -1,4 +1,5 @@
 import logging
+from readline import parse_and_bind
 
 from fastapi import FastAPI, HTTPException, Path, Query, Request, Response
 from fastapi.responses import JSONResponse
@@ -35,3 +36,17 @@ def listar_produtos():
         "dados": [representar_produto(produto) for produto in produtos],
         "didatica": {"sql": sql, "parametros": []},
     }
+
+    @app.get("/produtos/{id}")
+    def consultar_produto(produto_id: int = Path(gt=0)):
+        sql = "SELECT * FROM produtos WHERE id = %s"
+        parametros = (produto_id,)
+        produtos = executar_sql(sql, parametros)
+
+        if not produtos:
+            raise HTTPException(status_code=404, detail="Produto não encontrado.")
+
+        return{
+            "dados": representar_produto(produtos[0]),
+            "didatica": {"sql": sql, "parametros": parametros},
+        }
